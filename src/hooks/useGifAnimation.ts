@@ -41,37 +41,39 @@ const useGifAnimation = (data: GifDataProps[]): useGifAnimationReturnProps => {
     let dX = 1 * IMAGE_MOVE_FACTOR;
     let dY = 1 * IMAGE_MOVE_FACTOR;
 
-    let animationID = -1;
+    let animationID = 0;
 
     const animateImage = () => {
+      if (!imgRef.current) return
+
       startX += dX;
       startY += dY;
 
-      if (startX + imgRef.current!.width >= window.innerWidth || startX <= 0) {
+      if (startX + imgRef.current.width >= window.innerWidth || startX <= 0) {
         dX *= -1;
         startX = Math.max(
           0,
-          Math.min(startX, window.innerWidth - imgRef.current!.width)
+          Math.min(startX, window.innerWidth - imgRef.current.width)
         );
 
         setNewActiveIndexHandler();
       }
 
       if (
-        startY + imgRef.current!.height >= window.innerHeight ||
+        startY + imgRef.current.height >= window.innerHeight ||
         startY <= 0
       ) {
         dY *= -1;
         startY = Math.max(
           0,
-          Math.min(startY, window.innerHeight - imgRef.current!.height)
+          Math.min(startY, window.innerHeight - imgRef.current.height)
         );
 
         setNewActiveIndexHandler();
       }
 
       // update position
-      imgRef.current!.style.transform = `translate(${startX}px, ${startY}px)`;
+      imgRef.current.style.transform = `translate(${startX}px, ${startY}px)`;
 
       animationID = requestAnimationFrame(animateImage);
     };
@@ -83,10 +85,15 @@ const useGifAnimation = (data: GifDataProps[]): useGifAnimationReturnProps => {
 
   useEffect(() => {
     if (!imgRef.current) return;
-    const animationID = startImageAnimationHandler();
+
+    let innerAnimationFrameID = 0;
+    const initialAnimationID = requestAnimationFrame(() => {
+      innerAnimationFrameID = startImageAnimationHandler()
+    });
 
     return () => {
-      cancelAnimationFrame(animationID);
+      cancelAnimationFrame(initialAnimationID);
+      cancelAnimationFrame(innerAnimationFrameID)
     };
   }, []);
 
